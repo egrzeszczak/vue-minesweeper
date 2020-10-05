@@ -102,7 +102,7 @@ export default {
       );
       for (let y = 0; y < w; y++) {
         for (let x = 0; x < h; x++) {
-          let armWithBomb = Math.random() >= 0.9 ? 1 : 0;
+          let armWithBomb = Math.random() >= 0.8 ? 1 : 0;
           this.bombCount += armWithBomb;
           res.push({
             id: h * y + x,
