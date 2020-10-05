@@ -32,9 +32,9 @@
         <span v-if="minefield.length > 0" :class="{red: flagsPlanted > mineCount}">
           mines: {{ mineCount }}, flags planted: {{ flagsPlanted }}
         </span>
-        <button v-if="minefield.length > 0" @click="goBack">&larr;</button>
+        <button v-if="minefield.length > 0 && state == 0" @click="goBack">&larr;</button>
 
-        <div class="start-button" v-if="minefield.length == 0">
+        <div class="start-button" v-if="minefield.length == 0 || state != 0">
           <button 
           v-for="diff in difficulties" 
           :key="diff.name"
@@ -167,6 +167,7 @@ export default {
       else {
         if (!this.minefield[index].show) {
           this.minefield[index].show = true;
+          this.minefield[index].flag = false;
           let nearby = 0;
 
           // LU_CORNER CHECK --- OK
