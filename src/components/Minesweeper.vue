@@ -26,18 +26,16 @@
         </button>
         </div>
     </transition>
-
     <transition name="fade">
-        <div class="menu" v-if="minefield.length == 0">
-            <h1>Saper</h1>
-            <button @click="setDifficulty('easy')">Easy</button>
-            <button @click="setDifficulty('medium')">Medium</button>
-            <button @click="setDifficulty('hard')">Hard</button>
-            <button @click="setDifficulty('very hard')">Very hard</button>
-        </div>
-        <div class="back-menu" v-if="minefield.length > 0 && state == 0">
-            <button @click="gameOver(-1)">Surrender</button>
-        </div>
+      <div class="buttons">
+        <span v-if="minefield.length == 0">Saper</span>
+        <span v-if="minefield.length > 0">Stats </span>
+        <button v-if="minefield.length == 0" @click="setDifficulty('easy')">Easy</button>
+        <button v-if="minefield.length == 0" @click="setDifficulty('medium')">Medium</button>
+        <button v-if="minefield.length == 0" @click="setDifficulty('hard')">Hard</button>
+        <button v-if="minefield.length == 0" @click="setDifficulty('very hard')">Very hard</button>
+        <button v-if="minefield.length > 0" @click="goBack">&larr;</button>
+      </div>
     </transition>
   </div>
 </template>
@@ -49,11 +47,12 @@
 export default {
   data() {
     return {
-      state: 0, // 0 - playing, 1 - won, -1 - lost  
-      minefield: [],
       width: 0,
       height: 0,
-      bombCount: 0,
+      state: 2, // 0 - playing, 1 - won, -1 - lost, 2 - entry
+      minefield: [],
+      mineCount: 0,
+      mineProbability: 0.5, // hard=0........0.5........easy=1
       flagsPlanted: 0,
     };
   },
@@ -62,21 +61,25 @@ export default {
         this.minefield = [];
         switch (difficulty) {
             case "easy":
+                this.mineProbability = 0.9;
                 setTimeout(() => {
                     this.minefield = this.newMinefield(8, 8);
                     }, 250);
                 break;
             case "medium":
+                this.mineProbability = 0.8;
                 setTimeout(() => {
                     this.minefield = this.newMinefield(16, 12);
                     }, 250);
                 break;
             case "hard":
+                this.mineProbability = 0.6;
                 setTimeout(() => {
                     this.minefield = this.newMinefield(20, 15);
                     }, 250);
                 break;
             case "very hard":
+                this.mineProbability = 0.5;
                 setTimeout(() => {
                     this.minefield = this.newMinefield(30, 20);
                     }, 250);
@@ -90,7 +93,7 @@ export default {
         this.state = 0;
         this.width = w;
         this.height = h;
-        this.bombCount = 0;
+        this.mineCount = 0;
         this.flagsPlanted = 0;
       console.group("New Game", new Date());
       console.info(
@@ -102,8 +105,8 @@ export default {
       );
       for (let y = 0; y < w; y++) {
         for (let x = 0; x < h; x++) {
-          let armWithBomb = Math.random() >= 0.8 ? 1 : 0;
-          this.bombCount += armWithBomb;
+          let armWithBomb = Math.random() >= this.mineProbability ? 1 : 0;
+          this.mineCount += armWithBomb;
           res.push({
             id: h * y + x,
             pos_x: x,
@@ -119,12 +122,12 @@ export default {
       console.info(
         "Minefield created \n",
         "- Bombs:",
-        this.bombCount,
+        this.mineCount,
         "/",
         this.width * this.height,
         "\n",
         "- Bombs(%):",
-        Math.round((this.bombCount / (this.width * this.height)) * 100),
+        Math.round((this.mineCount / (this.width * this.height)) * 100),
         "%"
       );
       console.groupEnd();
@@ -305,11 +308,19 @@ export default {
         this.flagsPlanted--;
       } else this.flagsPlanted++;
       this.minefield[index].flag = !this.minefield[index].flag;
-      if (this.bombCount == this.flagsPlanted) {
-        this.gameSuccess();
+      if(this.mineCount == this.flagsPlanted){
+        let minesFound = 0;
+        this.minefield.forEach((field) => {
+          if (field.flag && field.bomb && !field.show) {
+            minesFound ++;
+            console.log(field.id);
+          }
+        });
+        if(minesFound === this.mineCount) this.gameSuccess();
       }
     },
     gameOver(index){
+        this.state = -1;
         console.error("You lost");
         this.minefield.forEach((field) => {
             setTimeout(() => {
@@ -317,10 +328,6 @@ export default {
             }, 150);
         });
         if(index > 0) this.minefield[index].show = true;
-        this.state = -1;
-        setTimeout(() => {
-            this.minefield = [];
-        }, 3000);
     },
     gameSuccess(){
         this.minefield.forEach((field) => {
@@ -328,6 +335,9 @@ export default {
         })
         console.info("You win.");
         this.state = 1;
+    },
+    goBack(){
+      this.minefield = [];
     }
   },
   computed: {
@@ -342,10 +352,29 @@ export default {
 
 <style lang="scss" scoped>
 .fade-enter-active, .fade-leave-active {
-  transition: opacity .5s;
+  transition: all .5s;
 }
 .fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
   opacity: 0;
+}
+.buttons{
+  position: absolute;
+  top: 90vh;
+  display: flex;
+  align-items: center;
+  span, button{
+    padding: .25rem 2rem;
+  }
+  button{
+    border: none;
+    background: none;
+    padding: .25rem 2rem;
+    border-left: 1px solid #2c3e50;
+    &:hover{
+      background: #2c3e50;
+      color: white;
+    }
+  }
 }
 .minesweeper {
   min-height: 100vh;
@@ -357,8 +386,8 @@ export default {
   }
   color: #2c3e50;
   display: grid;
-  align-items: center;
   justify-items: center;
+  align-items: center;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   .minefield {
