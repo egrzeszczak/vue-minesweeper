@@ -22,7 +22,7 @@
     <a href="https://github.com/egrzeszczak/vue-minesweeper"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/egrzeszczak/vue-minesweeper">View Demo</a>
+    <a href="https://egrzeszczak.github.io/vue-minesweeper/">View Demo</a>
     ·
     <a href="https://github.com/egrzeszczak/vue-minesweeper/issues">Report a Bug</a>
     ·
